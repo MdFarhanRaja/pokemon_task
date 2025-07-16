@@ -26,6 +26,13 @@ class PokemonCardView extends StatelessWidget {
                       child: CachedNetworkImage(
                         imageUrl: pokemon.images!.small!,
                         fit: BoxFit.cover,
+                        memCacheWidth: 300,
+                        memCacheHeight: 400,
+                        cacheKey: "pokemon_${pokemon.id}",
+                        fadeInDuration: const Duration(milliseconds: 100),
+                        fadeOutDuration: const Duration(milliseconds: 100),
+                        maxHeightDiskCache: 500,
+                        maxWidthDiskCache: 500,
                         placeholder:
                             (context, url) => const Center(
                               child: CircularProgressIndicator(
@@ -37,11 +44,7 @@ class PokemonCardView extends StatelessWidget {
                             ),
                         errorWidget:
                             (context, url, error) => const Center(
-                              child: Icon(
-                                Icons.broken_image,
-                                size: 50,
-                                color: Colors.grey,
-                              ),
+                              child: Icon(Icons.error),
                             ),
                       ),
                     )

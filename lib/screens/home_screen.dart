@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_task/providers/pokemon_list_provider.dart';
 import '../base_class.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-
 import 'fetch_more_view.dart';
 import 'pokemon_card_view.dart' show PokemonCardView;
 
