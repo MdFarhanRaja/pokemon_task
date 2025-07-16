@@ -49,6 +49,11 @@ class PokemonListProvider extends ChangeNotifier implements ApiResponse {
   bool hasSearchError = false;
   String searchErrorMessage = '';
 
+  bool hasListError = false;
+  String listErrorMessage = '';
+  int listErrorCode = 0;
+  Enum? listErrorRequestType;
+
   void searchPokemon(String query) {
     isSearching = true;
     searchResults = [];
@@ -86,6 +91,10 @@ class PokemonListProvider extends ChangeNotifier implements ApiResponse {
     } else {
       isLoading = false;
       isLoadingMore = false;
+      hasListError = true;
+      listErrorCode = responseCode;
+      listErrorRequestType = requestCode;
+      listErrorMessage = errorResponse;
     }
 
     notifyListeners();

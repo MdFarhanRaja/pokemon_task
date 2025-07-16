@@ -4,7 +4,7 @@ import 'package:flutter_task/providers/pokemon_list_provider.dart';
 import '../base_class.dart';
 import 'package:provider/provider.dart';
 import 'fetch_more_view.dart';
-import 'pokemon_card_view.dart' show PokemonCardView;
+import '../widgets/animated_pokemon_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -98,38 +98,31 @@ class PokemonSearch extends SearchDelegate<String> {
       builder: (context, provider, child) {
         if (provider.hasSearchError) {
           return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, color: Colors.red, size: 48),
-                const SizedBox(height: 16),
-                Text(
-                  'Search error occurred',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                  child: Text(
-                    'Please try a different search term',
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.red, size: 60),
+                  const SizedBox(height: 20),
+                  Text(
+                    'API Error: "${provider.searchErrorMessage}", code: 404, request: ApiRequests.pokemonSearch',
+                    style: const TextStyle(fontSize: 16),
                     textAlign: TextAlign.center,
                   ),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    query = query.substring(
-                      0,
-                      query.length > 1 ? query.length ~/ 2 : 1,
-                    );
-                    Future.microtask(() => provider.searchPokemon(query));
-                  },
-                  child: const Text('Try a simpler search'),
-                ),
-              ],
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      query = query.substring(
+                        0,
+                        query.length > 1 ? query.length ~/ 2 : 1,
+                      );
+                      Future.microtask(() => provider.searchPokemon(query));
+                    },
+                    child: const Text('Try a simpler search'),
+                  ),
+                ],
+              ),
             ),
           );
         }
@@ -158,7 +151,7 @@ class PokemonSearch extends SearchDelegate<String> {
             itemCount: provider.searchResults.length,
             itemBuilder: (context, index) {
               final pokemon = provider.searchResults[index];
-              return PokemonCardView(pokemon: pokemon);
+              return AnimatedPokemonCard(pokemon: pokemon, index: index);
             },
           );
         }
@@ -250,38 +243,74 @@ class _HomeScreenState extends BaseClass<HomeScreen> {
       backgroundColor: Colors.white,
       body: Consumer<PokemonListProvider>(
         builder: (context, pokemonListProvider, child) {
-          return pokemonListProvider.isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : Padding(
-                padding: const EdgeInsets.all(8.0),
+          if (pokemonListProvider.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (pokemonListProvider.hasListError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Expanded(
-                      child: GridView.builder(
-                        controller: _scrollController,
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              childAspectRatio: 0.75,
-                              crossAxisSpacing: 10,
-                              mainAxisSpacing: 10,
-                            ),
-                        itemCount:
-                            pokemonListProvider.pokemonList.length +
-                            (pokemonListProvider.isLoadingMore ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (index >= pokemonListProvider.pokemonList.length) {
-                            return const FetchMoreView();
-                          }
-                          final pokemon =
-                              pokemonListProvider.pokemonList[index];
-                          return PokemonCardView(pokemon: pokemon);
-                        },
-                      ),
+                    const Icon(
+                      Icons.error_outline,
+                      color: Colors.red,
+                      size: 60,
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'API Error: "${pokemonListProvider.listErrorMessage}", code: ${pokemonListProvider.listErrorCode}, request: ${pokemonListProvider.listErrorRequestType}',
+                      style: const TextStyle(fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        pokemonListProvider.hasListError = false;
+                        pokemonListProvider.getPokemonList();
+                      },
+                      child: const Text('Try Again'),
                     ),
                   ],
                 ),
-              );
+              ),
+            );
+          }
+
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              children: [
+                Expanded(
+                  child: GridView.builder(
+                    controller: _scrollController,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.75,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                        ),
+                    itemCount:
+                        pokemonListProvider.pokemonList.length +
+                        (pokemonListProvider.isLoadingMore ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index >= pokemonListProvider.pokemonList.length) {
+                        return const FetchMoreView();
+                      }
+                      final pokemon = pokemonListProvider.pokemonList[index];
+                      return AnimatedPokemonCard(
+                        pokemon: pokemon,
+                        index: index,
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          );
         },
       ),
     );
