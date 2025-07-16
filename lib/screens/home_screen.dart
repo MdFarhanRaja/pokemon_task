@@ -15,6 +15,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends BaseClass<HomeScreen> {
   late PokemonListProvider pokemonListProvider;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -26,7 +27,22 @@ class _HomeScreenState extends BaseClass<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       pokemonListProvider.getPokemonList();
     });
+    
+    _scrollController.addListener(_scrollListener);
     super.initState();
+  }
+  
+  void _scrollListener() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent * 0.9) {
+      pokemonListProvider.getPokemonList(loadMore: true);
+    }
+  }
+  
+  @override
+  void dispose() {
+    _scrollController.removeListener(_scrollListener);
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -45,18 +61,28 @@ class _HomeScreenState extends BaseClass<HomeScreen> {
               ? const Center(child: CircularProgressIndicator())
               : Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.75,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                  ),
-                  itemCount: pokemonListProvider.pokemonList.length,
-                  itemBuilder: (context, index) {
-                    final pokemon = pokemonListProvider.pokemonList[index];
-                    return PokemonCardView(pokemon: pokemon);
-                  },
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: GridView.builder(
+                        controller: _scrollController,
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.75,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                        ),
+                        itemCount: pokemonListProvider.pokemonList.length + (pokemonListProvider.isLoadingMore ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (index >= pokemonListProvider.pokemonList.length) {
+                            return const Center(child: CircularProgressIndicator());
+                          }
+                          final pokemon = pokemonListProvider.pokemonList[index];
+                          return PokemonCardView(pokemon: pokemon);
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               );
         },

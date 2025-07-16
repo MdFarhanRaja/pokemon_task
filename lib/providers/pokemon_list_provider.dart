@@ -12,12 +12,23 @@ import '../network/method.dart';
 class PokemonListProvider extends ChangeNotifier implements ApiResponse {
   List<Data> pokemonList = [];
   bool isLoading = false;
+  int currentPage = 1;
+  bool hasMoreData = true;
+  bool isLoadingMore = false;
 
-  void getPokemonList() {
-    isLoading = true;
+  void getPokemonList({bool loadMore = false}) {
+    if (loadMore) {
+      if (!hasMoreData || isLoadingMore) return;
+      isLoadingMore = true;
+      currentPage++;
+    } else {
+      isLoading = true;
+      currentPage = 1;
+      pokemonList = [];
+    }
     notifyListeners();
 
-    var params = {'pageSize': 10, 'page': 1};
+    var params = {'pageSize': 30, 'page': currentPage};
 
     ApiCall.makeApiCall(
       ApiRequests.pokemonList,
@@ -29,19 +40,41 @@ class PokemonListProvider extends ChangeNotifier implements ApiResponse {
     );
   }
 
+  void resetPagination() {
+    currentPage = 0;
+    hasMoreData = true;
+    pokemonList = [];
+    notifyListeners();
+  }
+
   @override
   void onError(String errorResponse, int responseCode, Enum requestCode) {
     isLoading = false;
+    isLoadingMore = false;
     notifyListeners();
   }
 
   @override
   void onResponse(String response, int responseCode, Enum requestCode) {
     //debugPrint(response);
-    pokemonList =
+    var newData =
         PokemonListResponse.fromJson(json.decode(response)).data ?? [];
+
+    if (newData.isEmpty) {
+      hasMoreData = false;
+    } else {
+      if (currentPage == 1) {
+        pokemonList = newData;
+      } else {
+        pokemonList.addAll(newData);
+      }
+    }
+
     isLoading = false;
+    isLoadingMore = false;
     notifyListeners();
-    debugPrint('PokemonList length: ${pokemonList.length}');
+    debugPrint(
+      'PokemonList length: ${pokemonList.length}, currentPage: $currentPage, hasMoreData: $hasMoreData',
+    );
   }
 }
