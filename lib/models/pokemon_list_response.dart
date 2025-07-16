@@ -325,6 +325,10 @@ class Prices {
   Prices.fromJson(Map<String, dynamic> json) {
     holofoil =
         json["holofoil"] == null ? null : Holofoil.fromJson(json["holofoil"]);
+
+    holofoil ??=
+        json["normal"] == null ? null : Holofoil.fromJson(json["normal"]);
+
     reverseHolofoil =
         json["reverseHolofoil"] == null
             ? null
