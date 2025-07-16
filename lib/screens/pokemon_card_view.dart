@@ -11,7 +11,7 @@ class PokemonCardView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      key: ValueKey(pokemon.id), // Using proper key with Pokemon ID
+      key: ValueKey(pokemon.id),
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: TextButton(

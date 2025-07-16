@@ -1,11 +1,8 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_task/models/pokemon_list_response.dart';
 import 'package:flutter_task/network/api_call.dart';
-import 'package:flutter_task/network/api_client.dart';
 import 'package:flutter_task/network/api_constants.dart';
-
 import '../network/call_back_listeners.dart';
 import '../network/method.dart';
 
@@ -47,10 +44,50 @@ class PokemonListProvider extends ChangeNotifier implements ApiResponse {
     notifyListeners();
   }
 
+  List<Data> searchResults = [];
+  bool isSearching = false;
+  bool hasSearchError = false;
+  String searchErrorMessage = '';
+
+  void searchPokemon(String query) {
+    isSearching = true;
+    searchResults = [];
+    hasSearchError = false;
+    searchErrorMessage = '';
+    notifyListeners();
+
+    debugPrint(
+      'GET Api:https://api.pokemontcg.io/v2/cards Params: {q: name:$query*}',
+    );
+
+    var params = {'q': 'name:$query*'};
+
+    ApiCall.makeApiCall(
+      ApiRequests.pokemonSearch,
+      null,
+      Method.get,
+      ApiConstants.pokemonSearch,
+      this,
+      queryParameters: params,
+    );
+  }
+
   @override
   void onError(String errorResponse, int responseCode, Enum requestCode) {
-    isLoading = false;
-    isLoadingMore = false;
+    debugPrint(
+      'API Error: $errorResponse, code: $responseCode, request: $requestCode',
+    );
+
+    if (requestCode == ApiRequests.pokemonSearch) {
+      isSearching = false;
+      hasSearchError = true;
+      searchErrorMessage = 'Search failed: $errorResponse';
+      debugPrint('Search error occurred: $errorResponse');
+    } else {
+      isLoading = false;
+      isLoadingMore = false;
+    }
+
     notifyListeners();
   }
 
@@ -60,21 +97,28 @@ class PokemonListProvider extends ChangeNotifier implements ApiResponse {
     var newData =
         PokemonListResponse.fromJson(json.decode(response)).data ?? [];
 
-    if (newData.isEmpty) {
-      hasMoreData = false;
+    if (requestCode == ApiRequests.pokemonSearch) {
+      searchResults = newData;
+      isSearching = false;
+      notifyListeners();
+      debugPrint('Search results: ${searchResults.length} items found');
     } else {
-      if (currentPage == 1) {
-        pokemonList = newData;
+      if (newData.isEmpty) {
+        hasMoreData = false;
       } else {
-        pokemonList.addAll(newData);
+        if (currentPage == 1) {
+          pokemonList = newData;
+        } else {
+          pokemonList.addAll(newData);
+        }
       }
-    }
 
-    isLoading = false;
-    isLoadingMore = false;
-    notifyListeners();
-    debugPrint(
-      'PokemonList length: ${pokemonList.length}, currentPage: $currentPage, hasMoreData: $hasMoreData',
-    );
+      isLoading = false;
+      isLoadingMore = false;
+      notifyListeners();
+      debugPrint(
+        'PokemonList length: ${pokemonList.length}, currentPage: $currentPage, hasMoreData: $hasMoreData',
+      );
+    }
   }
 }
