@@ -4,6 +4,7 @@ import '../base_class.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
+import 'fetch_more_view.dart';
 import 'pokemon_card_view.dart' show PokemonCardView;
 
 class HomeScreen extends StatefulWidget {
@@ -27,17 +28,18 @@ class _HomeScreenState extends BaseClass<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       pokemonListProvider.getPokemonList();
     });
-    
+
     _scrollController.addListener(_scrollListener);
     super.initState();
   }
-  
+
   void _scrollListener() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent * 0.9) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent * 0.9) {
       pokemonListProvider.getPokemonList(loadMore: true);
     }
   }
-  
+
   @override
   void dispose() {
     _scrollController.removeListener(_scrollListener);
@@ -66,18 +68,22 @@ class _HomeScreenState extends BaseClass<HomeScreen> {
                     Expanded(
                       child: GridView.builder(
                         controller: _scrollController,
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.75,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                        ),
-                        itemCount: pokemonListProvider.pokemonList.length + (pokemonListProvider.isLoadingMore ? 1 : 0),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: 0.75,
+                              crossAxisSpacing: 10,
+                              mainAxisSpacing: 10,
+                            ),
+                        itemCount:
+                            pokemonListProvider.pokemonList.length +
+                            (pokemonListProvider.isLoadingMore ? 1 : 0),
                         itemBuilder: (context, index) {
                           if (index >= pokemonListProvider.pokemonList.length) {
-                            return const Center(child: CircularProgressIndicator());
+                            return const FetchMoreView();
                           }
-                          final pokemon = pokemonListProvider.pokemonList[index];
+                          final pokemon =
+                              pokemonListProvider.pokemonList[index];
                           return PokemonCardView(pokemon: pokemon);
                         },
                       ),

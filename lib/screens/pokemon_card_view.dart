@@ -28,7 +28,12 @@ class PokemonCardView extends StatelessWidget {
                         fit: BoxFit.cover,
                         placeholder:
                             (context, url) => const Center(
-                              child: CircularProgressIndicator(),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.0,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.grey,
+                                ),
+                              ),
                             ),
                         errorWidget:
                             (context, url, error) => const Center(
